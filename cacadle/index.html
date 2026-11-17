@@ -14,29 +14,33 @@
   --key:#F1EEEA;
   --accent:#8B5A2B;      /* café */
   --accent-fg:#FFFFFF;
+  --ad:#FAF8F6;
   --font:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
   --tile:clamp(46px,13.5vw,58px);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){--bg:#141210;--fg:#F2EEEA;--muted:#8C847D;--line:#2C2824;--key:#24201C;--accent:#C68B52;--accent-fg:#141210;color-scheme:dark}
+  :root:not([data-theme="light"]){--bg:#141210;--fg:#F2EEEA;--muted:#8C847D;--line:#2C2824;--key:#24201C;--accent:#C68B52;--accent-fg:#141210;--ad:#1A1714;color-scheme:dark}
 }
-:root[data-theme="dark"]{--bg:#141210;--fg:#F2EEEA;--muted:#8C847D;--line:#2C2824;--key:#24201C;--accent:#C68B52;--accent-fg:#141210;color-scheme:dark}
+:root[data-theme="dark"]{--bg:#141210;--fg:#F2EEEA;--muted:#8C847D;--line:#2C2824;--key:#24201C;--accent:#C68B52;--accent-fg:#141210;--ad:#1A1714;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
-body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s}
 button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
-header{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;padding-block:12px 4px}
+header{display:grid;grid-template-columns:80px 1fr 80px;align-items:center;padding-block:12px 4px}
+header .l{display:flex}
+header .r{display:flex;justify-content:flex-end}
 h1{margin:0;text-align:center;font-size:24px;font-weight:800;letter-spacing:.02em}
 .ib{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;color:var(--muted)}
 .ib:hover{color:var(--fg)}
 .ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sub{text-align:center;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:18px}
+.sub a{color:inherit}
 
 /* Escalera */
 .ladder{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:8px;padding-block:18px 12px}
@@ -48,12 +52,13 @@ h1{margin:0;text-align:center;font-size:24px;font-weight:800;letter-spacing:.02e
 .row.input .t{color:var(--muted);cursor:pointer;transition:transform .1s}
 .row.input .t:hover{border-color:var(--muted)}
 .row.input .t.sel{border:2px solid var(--accent);color:var(--fg);transform:translateY(-3px)}
+.row.input .t.new{border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--bg));color:var(--fg);transform:translateY(-3px)}
 .row.input .t.typed{color:var(--fg);border-color:var(--fg)}
-.row.input.typing .t:not(.typed){color:transparent}
+.row.input .t.empty{color:var(--line)}
 .row.goal .t{border-style:dashed;color:var(--muted)}
 .row.goal.won .t{background:var(--accent);border:1.5px solid var(--accent);color:var(--accent-fg);animation:hop .45s ease-out both}
 .row.goal.won .t:nth-child(2){animation-delay:.05s}.row.goal.won .t:nth-child(3){animation-delay:.1s}.row.goal.won .t:nth-child(4){animation-delay:.15s}
-.dots{color:var(--line);font-size:18px;line-height:1;letter-spacing:2px}
+.dots{color:var(--line);font-size:18px;line-height:1}
 .help{font-size:13px;color:var(--muted);text-align:center}
 .shake{animation:shake .3s}
 @keyframes shake{25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
@@ -71,7 +76,9 @@ h1{margin:0;text-align:center;font-size:24px;font-weight:800;letter-spacing:.02e
 .kr{display:flex;gap:5px;justify-content:center}
 .k{flex:1;max-width:42px;height:50px;border-radius:7px;background:var(--key);font-weight:600;font-size:17px;text-transform:uppercase;display:grid;place-items:center}
 .k:active{background:var(--line)}
-.k.wide{max-width:64px;flex:1.5;font-size:18px}
+.k.wide{max-width:66px;flex:1.6;font-size:12px;font-weight:700;letter-spacing:.04em}
+.k.enter{background:var(--fg);color:var(--bg)}
+.k.enter.ready{background:var(--accent);color:var(--accent-fg)}
 
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 230px);transform:translate(-50%,6px);opacity:0;pointer-events:none;
   background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);text-align:center;transition:.18s;z-index:50}
@@ -88,7 +95,8 @@ h1{margin:0;text-align:center;font-size:24px;font-weight:800;letter-spacing:.02e
 .big{font-size:52px;line-height:1;margin-bottom:8px}
 .ex{display:flex;flex-direction:column;align-items:center;gap:4px;margin:14px 0}
 .ex .t{--tile:30px;border-radius:6px;font-size:14px}
-.btn{display:inline-block;margin-top:16px;padding:12px 26px;border-radius:99px;background:var(--fg);color:var(--bg);font-weight:700}
+.btn{display:inline-block;margin-top:16px;padding:12px 26px;border-radius:99px;background:var(--fg);color:var(--bg);font-weight:700;text-decoration:none}
+.btn.alt{background:var(--accent);color:var(--accent-fg)}
 .link{display:block;margin:12px auto 0;color:var(--muted);font-size:14px;text-decoration:underline;text-underline-offset:3px}
 .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0 4px}
 .nums b{display:block;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -102,6 +110,14 @@ h1{margin:0;text-align:center;font-size:24px;font-weight:800;letter-spacing:.02e
 textarea{width:100%;margin-top:10px;font:13px/1.4 ui-monospace,Menlo,monospace;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--key);color:var(--fg);resize:none}
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 
+/* Monetización */
+.ad{margin:18px 0 0;min-height:90px;border-radius:10px;background:var(--ad);border:1px dashed var(--line);display:grid;place-items:center;color:var(--muted);font-size:12px;overflow:hidden}
+.ad small{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.sponsor{font-size:12px;color:var(--muted)}
+.sponsor a{color:var(--fg);font-weight:700;text-decoration:none}
+.perks{text-align:left;margin:14px auto 0;padding:0;list-style:none;display:grid;gap:8px;max-width:280px}
+.perks li{display:flex;gap:10px;align-items:baseline;font-size:14px}
+
 .poo{position:fixed;top:-40px;font-size:26px;pointer-events:none;z-index:60;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.poo{display:none}}
@@ -110,9 +126,15 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 
 <div class="app">
   <header>
-    <button class="ib" id="b-help" aria-label="Cómo se juega"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2.1-2.4 3.8"/><circle cx="12" cy="17.2" r=".5"/></svg></button>
+    <div class="l">
+      <button class="ib" id="b-help" aria-label="Cómo se juega"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2.1-2.4 3.8"/><circle cx="12" cy="17.2" r=".5"/></svg></button>
+      <button class="ib" id="b-theme" aria-label="Cambiar a modo oscuro"><svg viewBox="0 0 24 24" id="i-theme"></svg></button>
+    </div>
     <h1>caca💩</h1>
-    <button class="ib" id="b-stats" aria-label="Estadísticas"><svg viewBox="0 0 24 24"><path d="M6 20v-7M12 20V5M18 20v-10"/></svg></button>
+    <div class="r">
+      <button class="ib" id="b-support" aria-label="Apoyar el juego"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A4 4 0 0 1 12 8a4 4 0 0 1 7 2.5C19 15.6 12 20 12 20z"/></svg></button>
+      <button class="ib" id="b-stats" aria-label="Estadísticas"><svg viewBox="0 0 24 24"><path d="M6 20v-7M12 20V5M18 20v-10"/></svg></button>
+    </div>
   </header>
   <div class="sub" id="sub"></div>
   <div class="ladder" id="ladder" aria-live="polite"></div>
@@ -128,15 +150,37 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 
 <script src="palabras.js"></script>
 <script>
+// ================== CONFIGURACIÓN DE MONETIZACIÓN ==================
+// Llena estos datos cuando subas el juego a tu dominio.
+const CONFIG = {
+  // Google AdSense: tu ID de editor (ca-pub-XXXX) y el ID del bloque de anuncio.
+  ADSENSE_CLIENT: '',
+  ADSENSE_SLOT: '',
+  // Mientras no haya AdSense, se muestra un recuadro "Tu marca aquí" que lleva a este correo/página.
+  CONTACTO_ANUNCIOS: 'anuncios@tudominio.com',
+  // Link de donaciones (Ko-fi, Buy Me a Coffee, Mercado Pago, PayPal…).
+  APOYO_URL: '',
+  // Patrocinios por reto: { númeroDeReto: { nombre, url } }. Ej: { 5: { nombre: 'Tacos El Güero', url: 'https://…' } }
+  PATROCINIOS: {},
+};
+// ===================================================================
 (() => {
   // ---------- Diccionario y distancias ----------
   const DIC = new Set(window.PALABRAS), ABC = 'abcdefghijklmnñopqrstuvwxyz', META = 'caca';
   const vecinos = w => { const o = []; for (let i = 0; i < 4; i++) for (const c of ABC) { if (c === w[i]) continue; const n = w.slice(0, i) + c + w.slice(i + 1); if (DIC.has(n)) o.push(n); } return o; };
-  const DIST = { [META]: 0 };
-  { const q = [META]; while (q.length) { const w = q.shift(); for (const n of vecinos(w)) if (!(n in DIST)) { DIST[n] = DIST[w] + 1; q.push(n); } } }
+  // Todas las palabras se valen para jugar; el par y las pistas solo usan palabras comunes.
+  const COM = new Set(window.COMUNES);
+  const bfs = ok => { const D = { [META]: 0 }, q = [META]; while (q.length) { const w = q.shift(); for (const n of vecinos(w)) if (ok(n) && !(n in D)) { D[n] = D[w] + 1; q.push(n); } } return D; };
+  const DIST = bfs(n => COM.has(n));   // distancia por palabras comunes (par)
+  const DISTF = bfs(() => true);       // distancia con todo el diccionario
   const dist = w => (w in DIST ? DIST[w] : Infinity);
-  const sig = w => vecinos(w).filter(n => dist(n) === dist(w) - 1).sort()[0];
-  const camino = w => { const p = [w]; while (p.at(-1) !== META && isFinite(dist(p.at(-1)))) p.push(sig(p.at(-1))); return p; };
+  const distF = w => (w in DISTF ? DISTF[w] : Infinity);
+  const sig = w => {
+    const vs = vecinos(w), com = vs.filter(n => COM.has(n) && isFinite(dist(n))).sort((a, b) => dist(a) - dist(b) || a.localeCompare(b));
+    if (com.length && (!isFinite(dist(w)) || dist(com[0]) < dist(w))) return com[0];
+    return vs.filter(n => distF(n) === distF(w) - 1).sort()[0];
+  };
+  const camino = w => { const p = [w]; while (p.at(-1) !== META && isFinite(distF(p.at(-1))) && p.length < 30) p.push(sig(p.at(-1))); return p; };
   const difIdx = (a, b) => [...a].findIndex((c, i) => c !== b[i]);
 
   // ---------- Día (medianoche del centro de México, UTC-6) ----------
@@ -148,7 +192,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   const MAXP = 3;
 
   // ---------- Guardado ----------
-  const K = { juego: 'cacadle.v1.juego', stats: 'cacadle.v1.stats', visto: 'cacadle.v1.visto' };
+  const K = { juego: 'cacadle.v1.juego', stats: 'cacadle.v1.stats', visto: 'cacadle.v1.visto', tema: 'cacadle.v1.tema' };
   const leer = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
   const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   const base0 = { jugados: 0, ganados: 0, pares: 0, racha: 0, mejor: 0, ultimoDia: null, dist: { 0: 0, 1: 0, 2: 0, 3: 0, x: 0 }, logros: {}, libres: 0 };
@@ -159,28 +203,39 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   const nuevo = (inicio, modo) => ({ modo, dia: DIA, inicio, par: dist(inicio), pasos: [], pistas: 0, pistaPara: null, fin: null, contado: false });
   let diario = leer(K.juego, null);
   if (!diario || diario.dia !== DIA || diario.inicio !== RETO) diario = nuevo(RETO, 'diario');
-  let juego = diario, buf = '', sel = null, armado = false;
+  let juego = diario;
+  // Entrada: o eliges una casilla (sel) y una letra (nueva), o escribes la palabra completa (buf).
+  let sel = null, nueva = null, buf = '', armado = false;
+  const limpiar = () => { sel = null; nueva = null; buf = ''; };
 
   // ---------- UI ----------
   const $ = id => document.getElementById(id);
   const ult = () => juego.pasos.at(-1) || juego.inicio;
   const medalla = o => o <= 0 ? ['🏆', 'Caca perfecta'] : o === 1 ? ['🥈', 'Casi perfecta'] : o === 2 ? ['🥉', 'Bien pujado'] : ['🧻', 'Llegaste'];
   const T = (w, cls = () => '') => [...w].map((c, i) => `<div class="t ${cls(i)}">${c}</div>`).join('');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let tt;
   const toast = (m, ms = 1800) => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), ms); };
+  const propuesta = () => buf.length === 4 ? buf : (sel !== null && nueva) ? ult().slice(0, sel) + nueva + ult().slice(sel + 1) : null;
 
   function render() {
     const libre = juego.modo === 'libre';
-    $('sub').textContent = (libre ? 'práctica' : `#${NUM}`) + ` · par ${juego.par}` + (!libre && stats.racha ? ` · 🔥 ${stats.racha}` : '');
+    const pat = !libre && CONFIG.PATROCINIOS[NUM];
+    $('sub').innerHTML = esc((libre ? 'práctica' : `#${NUM}`) + ` · par ${juego.par}` + (!libre && stats.racha ? ` · 🔥 ${stats.racha}` : ''))
+      + (pat ? `<div class="sponsor">reto patrocinado por <a href="${esc(pat.url)}" target="_blank" rel="noopener sponsored">${esc(pat.nombre)}</a></div>` : '');
     let h = `<div class="row start">${T(juego.inicio)}</div>`, prev = juego.inicio;
     for (const w of juego.pasos) { if (w === META) break; const i = difIdx(prev, w); h += `<div class="row">${T(w, k => k === i ? 'ch' : '')}</div>`; prev = w; }
     if (!juego.fin) {
       const b = ult();
-      h += `<div class="row input ${buf ? 'typing' : ''}" id="inp">${[0,1,2,3].map(k => buf
-        ? `<div class="t ${buf[k] ? 'typed' : ''}">${buf[k] || '·'}</div>`
-        : `<button class="t ${sel === k ? 'sel' : ''}" data-i="${k}" aria-label="Cambiar letra ${k+1}">${b[k]}</button>`).join('')}</div>`;
-      if (!juego.pasos.length && sel === null && !buf) h += `<div class="help">toca la letra que quieres cambiar</div>`;
-      else h += `<div class="dots" aria-hidden="true">⋮</div>`;
+      const cells = [0, 1, 2, 3].map(k => {
+        if (buf) return `<div class="t ${buf[k] ? 'typed' : 'empty'}">${buf[k] || '·'}</div>`;
+        const isSel = sel === k;
+        const ch = isSel && nueva ? nueva : b[k];
+        return `<button class="t ${isSel ? (nueva ? 'new' : 'sel') : ''}" data-i="${k}" aria-label="Cambiar letra ${k + 1}">${ch}</button>`;
+      }).join('');
+      h += `<div class="row input" id="inp">${cells}</div>`;
+      const ayudaTxt = buf ? (buf.length === 4 ? 'pícale ENVIAR' : '') : sel === null ? (juego.pasos.length ? '' : 'toca la letra que quieres cambiar') : nueva ? 'pícale ENVIAR' : 'ahora elige la nueva letra';
+      h += ayudaTxt ? `<div class="help">${ayudaTxt}</div>` : `<div class="dots" aria-hidden="true">⋮</div>`;
     }
     h += `<div class="row goal ${juego.fin === 'gano' ? 'won' : ''}">${T(META)}</div>`;
     $('ladder').innerHTML = h;
@@ -190,12 +245,15 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
     $('b-quit').disabled = !!juego.fin;
     $('b-quit').textContent = armado ? '¿seguro?' : 'rendirse';
     $('b-quit').classList.toggle('armed', armado);
+    const ent = document.querySelector('[data-k="enter"]'); if (ent) ent.classList.toggle('ready', !!propuesta());
     requestAnimationFrame(() => { const e = $('inp') || $('ladder').lastElementChild; e.scrollIntoView({ block: 'nearest' }); });
   }
 
   function renderKB() {
-    $('kb').innerHTML = ['qwertyuiop', 'asdfghjklñ', 'zxcvbnm<'].map(r => `<div class="kr">${[...r].map(c =>
-      c === '<' ? `<button class="k wide" data-k="back" aria-label="Borrar">⌫</button>` : `<button class="k" data-k="${c}">${c}</button>`).join('')}</div>`).join('');
+    $('kb').innerHTML = ['qwertyuiop', 'asdfghjklñ', '>zxcvbnm<'].map(r => `<div class="kr">${[...r].map(c =>
+      c === '>' ? `<button class="k wide enter" data-k="enter">ENVIAR</button>`
+      : c === '<' ? `<button class="k wide" data-k="back" aria-label="Borrar" style="font-size:18px">⌫</button>`
+      : `<button class="k" data-k="${c}">${c}</button>`).join('')}</div>`).join('');
   }
 
   // ---------- Jugadas ----------
@@ -203,30 +261,32 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   function tecla(k) {
     if (juego.fin || !$('ov').hidden) return;
     if (armado) armado = false;
-    if (k === 'back') { if (buf) buf = buf.slice(0, -1); else sel = null; return render(); }
+    if (k === 'enter') return enviar();
+    if (k === 'back') { if (buf) buf = buf.slice(0, -1); else if (nueva) nueva = null; else sel = null; return render(); }
     if (!/^[a-zñ]$/.test(k)) return;
-    if (sel !== null) { const b = ult(); const w = b.slice(0, sel) + k + b.slice(sel + 1); if (w !== b) enviar(w); return; }
-    buf += k; render();
-    if (buf.length === 4) { const w = buf; buf = ''; enviar(w); }
+    if (sel !== null) { nueva = k === ult()[sel] ? null : k; return render(); }
+    if (buf.length < 4) { buf += k; render(); }
   }
-  function enviar(w) {
+  function enviar() {
+    const w = propuesta();
+    if (!w) return error(buf ? 'Faltan letras: son 4' : sel === null ? 'Toca la letra que quieres cambiar' : 'Elige la nueva letra');
     const prev = ult(), n = [...w].filter((c, i) => c !== prev[i]).length;
-    if (n === 0) return render(), error('Es la misma palabra');
-    if (n > 1) return render(), error('Cambia solo una letra');
-    if (!DIC.has(w)) return render(), error(`${w.toUpperCase()} no está en la lista`);
-    if (w === juego.inicio || juego.pasos.includes(w)) return render(), error('Ya usaste esa palabra');
-    juego.pasos.push(w); sel = null; juego.pistaPara = null;
+    if (n === 0) return error('Es la misma palabra');
+    if (n > 1) return error('Cambia solo una letra');
+    if (!DIC.has(w)) return error(`${w.toUpperCase()} no está en el diccionario`);
+    if (w === juego.inicio || juego.pasos.includes(w)) return error('Ya usaste esa palabra');
+    juego.pasos.push(w); limpiar(); juego.pistaPara = null;
     if (w === META) return ganar();
-    if (!isFinite(dist(w))) toast('Por aquí no se llega. Deshaz.', 2400);
+    if (!isFinite(distF(w))) toast('Por aquí no se llega. Deshaz.', 2400);
     guardarJuego(); render();
   }
-  function deshacer() { if (juego.fin || !juego.pasos.length) return; juego.pasos.pop(); buf = ''; sel = null; juego.pistaPara = null; guardarJuego(); render(); }
+  function deshacer() { if (juego.fin || !juego.pasos.length) return; juego.pasos.pop(); limpiar(); juego.pistaPara = null; guardarJuego(); render(); }
   function pista() {
     if (juego.fin || juego.pistas >= MAXP) return;
     const c = ult();
-    if (!isFinite(dist(c))) return toast('Por aquí no se llega. Deshaz.', 2400);
+    if (!isFinite(distF(c))) return toast('Por aquí no se llega. Deshaz.', 2400);
     const nx = sig(c);
-    juego.pistas++; buf = '';
+    juego.pistas++; limpiar();
     if (juego.pistaPara === c) toast(`Prueba con ${nx.toUpperCase()}`, 3000);
     else { juego.pistaPara = c; sel = difIdx(c, nx); toast('Cambia esta letra', 2200); }
     guardarJuego(); render();
@@ -262,7 +322,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   // ---------- Compartir ----------
   function cuadros() {
     let p = juego.inicio, s = '';
-    for (const w of juego.pasos) { if (w === META) { s += '💩'; break; } const a = dist(p), b = dist(w); s += b < a ? '🟫' : b === a ? '🟨' : '🟥'; p = w; }
+    for (const w of juego.pasos) { if (w === META) { s += '💩'; break; } const f = isFinite(dist(p)) && isFinite(dist(w)) ? dist : distF, a = f(p), b = f(w); s += b < a ? '🟫' : b === a ? '🟨' : '🟥'; p = w; }
     return juego.fin === 'gano' ? s : s + '🏳️';
   }
   function texto() {
@@ -270,12 +330,32 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
     return [g.modo === 'diario' ? `caca💩 #${NUM}` : 'caca💩 práctica',
       gano ? `${g.pasos.length}/${g.par} ${medalla(g.pasos.length - g.par)[0]}` : `me rendí (par ${g.par})`,
       cuadros(),
-      [g.pistas ? `💡${g.pistas}` : '', g.modo === 'diario' && stats.racha ? `🔥${stats.racha}` : ''].filter(Boolean).join(' ')].filter(Boolean).join('\n');
+      [g.pistas ? `💡${g.pistas}` : '', g.modo === 'diario' && stats.racha ? `🔥${stats.racha}` : ''].filter(Boolean).join(' '),
+      /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.href) ? location.origin + location.pathname : ''].filter(Boolean).join('\n');
   }
   async function compartir() {
     const s = texto();
     try { await navigator.clipboard.writeText(s); toast('Copiado'); }
     catch { const t = $('share'); t.hidden = false; t.value = s; t.select(); toast('Copia el texto'); }
+  }
+
+  // ---------- Anuncios ----------
+  let adsLoaded = false;
+  function anuncio() {
+    if (CONFIG.ADSENSE_CLIENT && CONFIG.ADSENSE_SLOT) {
+      return `<div class="ad"><ins class="adsbygoogle" style="display:block;width:100%" data-ad-client="${esc(CONFIG.ADSENSE_CLIENT)}" data-ad-slot="${esc(CONFIG.ADSENSE_SLOT)}" data-ad-format="auto" data-full-width-responsive="true"></ins></div>`;
+    }
+    return `<div class="ad"><div><small>Publicidad</small>Tu marca aquí · ${esc(CONFIG.CONTACTO_ANUNCIOS)}</div></div>`;
+  }
+  function activarAnuncio() {
+    if (!CONFIG.ADSENSE_CLIENT || !CONFIG.ADSENSE_SLOT) return;
+    if (!adsLoaded) {
+      adsLoaded = true;
+      const s = document.createElement('script'); s.async = true; s.crossOrigin = 'anonymous';
+      s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(CONFIG.ADSENSE_CLIENT)}`;
+      document.head.appendChild(s);
+    }
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch {}
   }
 
   // ---------- Hojas ----------
@@ -292,8 +372,18 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
         <div class="row">${T('capa', i => i === 3 ? 'ch' : '')}</div>
         <div class="row">${T('caca', i => i === 2 ? 'ch' : '')}</div>
       </div>
-      <p class="m">Toca una letra y luego la nueva.<br>El par es el camino más corto. Un reto nuevo cada día.</p>
+      <p class="m">Toca una letra, elige la nueva y pícale ENVIAR.<br>El par es el camino más corto. Un reto nuevo cada día.</p>
       <button class="btn" data-x>Jugar</button>`);
+  }
+  function apoyo() {
+    abrir(`<div class="big">💩</div><h2>Apoya a caca</h2>
+      <p class="m">El juego es gratis. Con tu apoyo sale un reto nuevo diario.</p>
+      <ul class="perks">
+        <li><span>☕</span><span>Invítanos un café</span></li>
+        <li><span>📣</span><span>Patrocina un reto: tu marca aparece todo el día bajo el título</span></li>
+        <li><span>📲</span><span>Comparte tu resultado en el grupo</span></li>
+      </ul>
+      ${CONFIG.APOYO_URL ? `<a class="btn alt" href="${esc(CONFIG.APOYO_URL)}" target="_blank" rel="noopener">Invitar un café</a>` : `<p class="m" style="margin-top:16px">Donaciones y patrocinios: ${esc(CONFIG.CONTACTO_ANUNCIOS)}</p>`}`);
   }
   const nums = () => `<div class="nums">
       <div><b>${stats.jugados}</b><span>jugados</span></div>
@@ -315,11 +405,13 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
       <button class="btn" id="b-share">Compartir</button>
       <textarea id="share" rows="4" readonly hidden></textarea>
       ${d ? `<hr><p class="m">Siguiente caca en</p><div class="count" id="count">${reloj()}</div>${nums()}` : ''}
+      ${anuncio()}
       <button class="link" id="b-free">${d ? 'practicar mientras' : 'otra práctica'}</button>
       ${d ? '' : '<button class="link" id="b-daily">volver al reto del día</button>'}`);
+    activarAnuncio();
     $('b-share').onclick = compartir;
     $('b-free').onclick = () => { cerrar(); practica(); };
-    if (!d) $('b-daily').onclick = () => { cerrar(); juego = diario; render(); };
+    if (!d) $('b-daily').onclick = () => { cerrar(); juego = diario; limpiar(); render(); };
     clearInterval(rt);
     rt = setInterval(() => { const c = $('count'); if (!c) return clearInterval(rt); c.textContent = reloj(); if (hoy() !== DIA) location.reload(); }, 1000);
   }
@@ -328,12 +420,12 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
       ${juego.modo === 'libre' ? '<button class="link" id="b-daily">volver al reto del día</button>' : '<button class="link" id="b-free">practicar</button>'}`);
     const f = $('b-free'), dl = $('b-daily');
     if (f) f.onclick = () => { cerrar(); practica(); };
-    if (dl) dl.onclick = () => { cerrar(); juego = diario; buf = ''; sel = null; render(); };
+    if (dl) dl.onclick = () => { cerrar(); juego = diario; limpiar(); render(); };
   }
-  const NO = new Set('caca caga cago cagas cagan pedo pene puta puto joto teta popo pipi nazi sida'.split(' '));
+  const NO = new Set('caca caga cago cagas cagan pedo pene puta puto joto teta popo pipi nazi sida culo coño anos'.split(' '));
+  const INICIOS = [...new Set(window.RETOS)].filter(w => !NO.has(w));
   function practica() {
-    const pool = Object.keys(DIST).filter(w => DIST[w] >= 3 && DIST[w] <= 6 && !NO.has(w));
-    juego = nuevo(pool[Math.floor(Math.random() * pool.length)], 'libre'); buf = ''; sel = null; armado = false; render();
+    juego = nuevo(INICIOS[Math.floor(Math.random() * INICIOS.length)], 'libre'); limpiar(); armado = false; render();
   }
 
   function lluvia() {
@@ -345,21 +437,33 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
     }
   }
 
+  // ---------- Tema claro / oscuro ----------
+  const LUNA = '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>';
+  const SOL = '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.5 12h-2M21.5 12h-2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>';
+  const oscuro = () => (document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+  function pintarTema() { const d = oscuro(); $('i-theme').innerHTML = d ? SOL : LUNA; $('b-theme').setAttribute('aria-label', d ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'); }
+  const temaGuardado = leer(K.tema, null);
+  if (temaGuardado) document.documentElement.setAttribute('data-theme', temaGuardado);
+  $('b-theme').onclick = () => { const t = oscuro() ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); guardar(K.tema, t); pintarTema(); };
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', pintarTema); } catch {}
+
   // ---------- Eventos ----------
   $('kb').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) tecla(b.dataset.k); });
-  $('ladder').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b || juego.fin) return; const i = +b.dataset.i; sel = sel === i ? null : i; buf = ''; render(); });
+  $('ladder').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b || juego.fin) return; const i = +b.dataset.i; if (sel === i) { sel = null; nueva = null; } else { sel = i; nueva = null; } buf = ''; render(); });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { if (!$('ov').hidden) cerrar(); else { sel = null; buf = ''; render(); } return; }
+    if (e.key === 'Escape') { if (!$('ov').hidden) cerrar(); else { limpiar(); render(); } return; }
     if (e.ctrlKey || e.metaKey || e.altKey || !$('ov').hidden) return;
+    if (e.key === 'Enter') { e.preventDefault(); return tecla('enter'); }
     if (e.key === 'Backspace') return tecla('back');
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { buf = ''; sel = sel === null ? 0 : (sel + (e.key === 'ArrowRight' ? 1 : 3)) % 4; return render(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { buf = ''; nueva = null; sel = sel === null ? 0 : (sel + (e.key === 'ArrowRight' ? 1 : 3)) % 4; return render(); }
     let k = e.key.toLowerCase(); if (k !== 'ñ') k = k.normalize('NFD').replace(/[̀-ͯ]/g, '');
     tecla(k);
   });
   $('b-undo').onclick = deshacer; $('b-hint').onclick = pista; $('b-quit').onclick = rendirse;
-  $('b-help').onclick = ayuda; $('b-stats').onclick = () => juego.fin ? resultado() : estadisticas();
+  $('b-help').onclick = ayuda; $('b-support').onclick = apoyo;
+  $('b-stats').onclick = () => juego.fin ? resultado() : estadisticas();
 
-  renderKB(); render();
+  pintarTema(); renderKB(); render();
   if (!leer(K.visto, false)) { guardar(K.visto, true); ayuda(); }
   else if (juego.fin) setTimeout(resultado, 300);
 })();
