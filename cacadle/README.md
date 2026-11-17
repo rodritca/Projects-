@@ -7,7 +7,8 @@ Juego diario de escalera de palabras en español mexicano: llega a **CACA** camb
 - Medallas: 🏆 par · 🥈 par+1 · 🥉 par+2 · 🧻 más.
 - Un reto nuevo cada medianoche (hora del centro de México, UTC-6). El reto #1 es el 17 nov 2026; la lista de 365 retos se repite cada año.
 - Dificultad por día: lunes fácil (par 3), martes a jueves normal (4), viernes y domingo difíciles (5), sábado de terror (7+).
-- Racha 🔥, estadísticas, 9 logros, 3 pistas por reto, deshacer, modo libre ilimitado y resultado para compartir sin spoilers.
+- Interfaz minimalista: toca la letra que quieres cambiar y luego la nueva (o escribe la palabra completa).
+- Racha 🔥, logros, 3 pistas por reto, deshacer, modo práctica y resultado para compartir sin spoilers.
 - Todo se guarda en el navegador (localStorage). No hay servidor ni cuentas.
 
 ## Archivos
