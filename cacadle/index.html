@@ -1,0 +1,573 @@
+<title>Cacadle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Llega a CACA cambiando una letra a la vez. Un reto nuevo cada día.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800&family=Rubik:wght@600;800&display=swap">
+<style>
+/* Layout: one-screen app — header, scrolling ladder, action row, keyboard pinned to the bottom. */
+:root{
+  --bg:#F4EEF8;          /* lavanda pálido */
+  --surface:#FFFFFF;
+  --fg:#2B1A12;          /* chocolate */
+  --muted:#7C6A73;
+  --line:#DCCFE2;
+  --accent:#D6006F;      /* rosa mexicano */
+  --accent-fg:#FFFFFF;
+  --poop:#7A4A23;        /* café */
+  --poop-dark:#4E2E14;
+  --gold:#F2B705;
+  --tile:#FFFFFF;
+  --tile-edge:#CDBFD6;
+  --key:#E6DCEC;
+  --key-edge:#C9BAD3;
+  --ok:#2F8F4E;
+  --warn:#C98A00;
+  --bad:#C4372B;
+  --font-display:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --font-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-tile:"Rubik","Nunito",system-ui,sans-serif;
+  --tile-size:clamp(44px,13vw,56px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1B120E; --surface:#2A1D17; --fg:#F6ECE4; --muted:#B29E92; --line:#3E2D24;
+    --accent:#FF4FA3; --accent-fg:#1B120E; --poop:#A86A3D; --poop-dark:#7A4A23; --gold:#FFC93C;
+    --tile:#2E2019; --tile-edge:#1A100B; --key:#3A2A21; --key-edge:#22160F;
+    --ok:#5CC27C; --warn:#E5B23A; --bad:#FF6F61; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1B120E; --surface:#2A1D17; --fg:#F6ECE4; --muted:#B29E92; --line:#3E2D24;
+  --accent:#FF4FA3; --accent-fg:#1B120E; --poop:#A86A3D; --poop-dark:#7A4A23; --gold:#FFC93C;
+  --tile:#2E2019; --tile-edge:#1A100B; --key:#3A2A21; --key-edge:#22160F;
+  --ok:#5CC27C; --warn:#E5B23A; --bad:#FF6F61; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.app{height:100%;display:flex;flex-direction:column;max-width:520px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Header */
+header{display:flex;align-items:center;gap:8px;padding-block:10px 6px;border-bottom:2px solid var(--line)}
+.logo{flex:1;text-align:center;font-family:var(--font-display);font-size:30px;letter-spacing:.5px;line-height:1;color:var(--poop)}
+.logo b{color:var(--accent);font-weight:400}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;font-size:20px}
+.icon-btn:hover{background:var(--key)}
+.icon-btn svg{width:22px;height:22px;stroke:var(--fg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.info{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px;padding-block:8px;font-size:13px;color:var(--muted);font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;background:var(--surface);border:1.5px solid var(--line);color:var(--fg);font-variant-numeric:tabular-nums}
+.chip.mode{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.chip.fire{color:var(--fg)}
+
+/* Ladder */
+.ladder{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding-block:6px 10px;scroll-behavior:smooth}
+.row{display:flex;gap:6px;position:relative}
+.row .tag{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.row .side{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile{width:var(--tile-size);height:var(--tile-size);border-radius:12px;display:grid;place-items:center;
+  font-family:var(--font-tile);font-weight:800;font-size:calc(var(--tile-size)*.5);text-transform:uppercase;
+  background:var(--tile);border:2px solid var(--tile-edge);border-bottom-width:5px;color:var(--fg);user-select:none}
+.row.start .tile{background:var(--poop);border-color:var(--poop-dark);color:#FFF6EC}
+.tile.changed{background:var(--accent);border-color:color-mix(in srgb,var(--accent) 70%,#000);color:var(--accent-fg)}
+.row.input .tile{border-style:solid;border-color:var(--line);border-bottom-width:5px}
+.row.input .tile.filled{border-color:var(--fg);animation:pop .12s ease-out}
+.row.input .tile.ghost{color:color-mix(in srgb,var(--muted) 45%,transparent)}
+.row.input .tile.cursor{border-color:var(--accent)}
+.row.goal .tile{background:transparent;border:2.5px dashed var(--gold);border-bottom-width:2.5px;color:var(--gold)}
+.row.goal.reached .tile{background:var(--gold);border:2px solid color-mix(in srgb,var(--gold) 70%,#000);border-bottom-width:5px;color:#3A2400;animation:bounce .5s ease-out both}
+.row.goal.reached .tile:nth-child(2){animation-delay:.06s}.row.goal.reached .tile:nth-child(3){animation-delay:.12s}.row.goal.reached .tile:nth-child(4){animation-delay:.18s}
+.gap{height:18px;width:2px;background:repeating-linear-gradient(var(--line) 0 4px,transparent 4px 8px)}
+.shake{animation:shake .35s}
+@keyframes pop{50%{transform:scale(1.08)}}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@keyframes bounce{0%{transform:translateY(0)}40%{transform:translateY(-14px)}70%{transform:translateY(2px)}100%{transform:translateY(0)}}
+
+/* Actions */
+.actions{display:flex;gap:8px;justify-content:center;padding-block:6px}
+.act{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface);font-weight:800;font-size:13px}
+.act:hover{border-color:var(--fg)}
+.act:disabled{opacity:.4;cursor:default}
+.act.danger.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+.act .n{font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* Keyboard */
+.kb{display:flex;flex-direction:column;gap:6px;padding-block:6px max(10px,env(safe-area-inset-bottom,0px))}
+.kb-row{display:flex;gap:5px;justify-content:center}
+.key{flex:1;max-width:44px;height:52px;border-radius:8px;border:0;border-bottom:3px solid var(--key-edge);background:var(--key);
+  font-family:var(--font-tile);font-weight:800;font-size:17px;text-transform:uppercase;display:grid;place-items:center;padding:0}
+.key:active{transform:translateY(2px);border-bottom-width:1px}
+.key.wide{max-width:68px;flex:1.5;font-size:12px;font-family:var(--font-body)}
+.key.enter{background:var(--accent);border-color:color-mix(in srgb,var(--accent) 65%,#000);color:var(--accent-fg)}
+.key.hot{background:var(--poop);color:#FFF6EC;border-color:var(--poop-dark)}
+
+/* Toast */
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 70px);transform:translate(-50%,-10px);opacity:0;pointer-events:none;
+  background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:800;font-size:14px;max-width:calc(100% - 32px);text-align:center;transition:.2s;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* Modals */
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--fg) 45%,transparent);display:flex;align-items:flex-end;justify-content:center;z-index:40;
+  padding:env(safe-area-inset-top,0px) max(0px,env(safe-area-inset-right,0px)) 0 max(0px,env(safe-area-inset-left,0px))}
+.sheet{background:var(--surface);width:100%;max-width:520px;max-height:92%;overflow-y:auto;border-radius:22px 22px 0 0;
+  padding:20px max(20px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));animation:up .25s ease-out}
+@media (min-width:560px){.overlay{align-items:center}.sheet{border-radius:22px}}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sheet h2{font-family:var(--font-display);font-weight:400;font-size:28px;margin:0 0 4px;text-wrap:balance;color:var(--poop)}
+.sheet h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:20px 0 8px}
+.sheet p{margin:6px 0;line-height:1.5}
+.sheet .close{float:right;margin:-6px -6px 0 0}
+.mini{display:flex;gap:4px;margin:4px 0}
+.mini .tile{--tile-size:34px;border-bottom-width:3px;border-radius:8px}
+.ex{display:flex;flex-direction:column;gap:4px;margin:10px 0}
+.ex .lab{font-size:12px;color:var(--muted);font-weight:700;margin-left:6px;align-self:center}
+.medals{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;margin-top:6px}
+.medals span:nth-child(odd){font-size:20px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.stat b{display:block;font-family:var(--font-display);font-weight:400;font-size:30px;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:11px;color:var(--muted);font-weight:700}
+.bars{display:flex;flex-direction:column;gap:4px}
+.bar{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;font-size:13px;font-weight:700}
+.bar i{display:block;height:22px;min-width:26px;border-radius:6px;background:var(--key);color:var(--fg);font-style:normal;text-align:right;padding:2px 8px;font-variant-numeric:tabular-nums}
+.bar.now i{background:var(--accent);color:var(--accent-fg)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.badge{display:flex;gap:8px;align-items:center;padding:8px 10px;border-radius:12px;border:1.5px solid var(--line);font-size:12px;line-height:1.25}
+.badge .e{font-size:22px}
+.badge b{display:block;font-size:13px}
+.badge.locked{opacity:.4;filter:grayscale(1)}
+
+.result{text-align:center}
+.result .big{font-size:56px;line-height:1;margin:6px 0}
+.result .grid{font-size:22px;letter-spacing:2px;margin:8px 0}
+.path{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 6px;font-family:var(--font-tile);font-weight:800;text-transform:uppercase;font-size:14px;margin:8px 0}
+.path span{padding:2px 8px;border-radius:6px;background:var(--key)}
+.cta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.btn{padding:12px 20px;border-radius:99px;border:0;font-weight:800;font-size:15px;background:var(--key)}
+.btn.primary{background:var(--accent);color:var(--accent-fg)}
+.count{font-family:var(--font-tile);font-weight:800;font-size:26px;font-variant-numeric:tabular-nums}
+.sharebox{width:100%;margin-top:10px;font:13px/1.4 ui-monospace,Menlo,monospace;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);resize:none}
+
+.confetti{position:fixed;top:-40px;font-size:28px;pointer-events:none;z-index:60;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.confetti{display:none}}
+@media (max-height:640px){.key{height:44px}:root{--tile-size:clamp(38px,11vw,46px)}}
+</style>
+
+<div class="app">
+  <header>
+    <button class="icon-btn" id="btn-help" aria-label="Cómo se juega">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-mode" aria-label="Cambiar a modo libre" title="Modo libre">
+      <svg viewBox="0 0 24 24"><path d="M18.2 7.5A8 8 0 1 0 20 12"/><path d="M20 4v4h-4"/></svg>
+    </button>
+    <div class="logo">CACA<b>DLE</b></div>
+    <button class="icon-btn" id="btn-stats" aria-label="Estadísticas">
+      <svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-theme" aria-label="Cambiar tema">
+      <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+    </button>
+  </header>
+
+  <div class="info" id="info"></div>
+  <div class="ladder" id="ladder" aria-live="polite"></div>
+
+  <div class="actions">
+    <button class="act" id="btn-undo">↩ Deshacer</button>
+    <button class="act" id="btn-hint">💡 Pista <span class="n" id="hint-n"></span></button>
+    <button class="act danger" id="btn-quit">🏳 Me rindo</button>
+  </div>
+
+  <div class="kb" id="kb"></div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<div class="overlay" id="overlay" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script src="palabras.js"></script>
+<script>
+(() => {
+  // ===== Diccionario y distancias =====
+  const DIC = new Set(window.PALABRAS);
+  const ABC = 'abcdefghijklmnñopqrstuvwxyz';
+  const META = 'caca';
+  const vecinos = w => {
+    const out = [];
+    for (let i = 0; i < 4; i++) for (const c of ABC) {
+      if (c === w[i]) continue;
+      const n = w.slice(0, i) + c + w.slice(i + 1);
+      if (DIC.has(n)) out.push(n);
+    }
+    return out;
+  };
+  const DIST = { [META]: 0 };
+  { const q = [META]; while (q.length) { const w = q.shift(); for (const n of vecinos(w)) if (!(n in DIST)) { DIST[n] = DIST[w] + 1; q.push(n); } } }
+  const dist = w => (w in DIST ? DIST[w] : Infinity);
+  const siguiente = w => vecinos(w).filter(n => dist(n) === dist(w) - 1).sort()[0];
+  const camino = w => { const p = [w]; while (p[p.length - 1] !== META && isFinite(dist(p[p.length - 1]))) p.push(siguiente(p[p.length - 1])); return p; };
+
+  // ===== Día (medianoche hora del centro de México, UTC-6) =====
+  const EPOCH = Date.UTC(2026, 10, 17, 6, 0, 0); // reto #1 = 17 nov 2026
+  const DAY = 864e5;
+  const hoy = () => Math.floor((Date.now() - EPOCH) / DAY);
+  const DIA = hoy();
+  const NUM = DIA + 1;
+  const RETO = window.RETOS[((DIA % window.RETOS.length) + window.RETOS.length) % window.RETOS.length];
+  const DOW = new Date(Date.now() - 6 * 3600e3).getUTCDay();
+  const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const MAX_PISTAS = 3;
+
+  // ===== Almacenamiento (siempre con try/catch) =====
+  const K = { juego: 'cacadle.v1.juego', stats: 'cacadle.v1.stats', visto: 'cacadle.v1.visto', tema: 'cacadle.v1.tema' };
+  const leer = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+  const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+  const statsBase = { jugados: 0, ganados: 0, pares: 0, racha: 0, mejor: 0, ultimoDia: null, dist: { 0: 0, 1: 0, 2: 0, 3: 0, x: 0 }, logros: {}, libres: 0 };
+  let stats = Object.assign({}, statsBase, leer(K.stats, {}));
+  stats.dist = Object.assign({}, statsBase.dist, stats.dist);
+  if (stats.ultimoDia !== null && stats.ultimoDia < DIA - 1) stats.racha = 0; // se rompió la racha
+
+  const nuevoJuego = (inicio, modo) => ({ modo, dia: DIA, inicio, par: dist(inicio), pasos: [], pistas: 0, pistaPara: null, fin: null, contado: false });
+  let diario = leer(K.juego, null);
+  if (!diario || diario.dia !== DIA || diario.inicio !== RETO) diario = nuevoJuego(RETO, 'diario');
+  let juego = diario;
+  let entrada = '';
+  let rindiendo = false;
+
+  // ===== Utilidades UI =====
+  const $ = id => document.getElementById(id);
+  const ultima = () => juego.pasos.length ? juego.pasos[juego.pasos.length - 1] : juego.inicio;
+  const nivel = p => p <= 3 ? 'Fácil' : p === 4 ? 'Normal' : p <= 6 ? 'Difícil' : 'Del terror';
+  const medalla = over => over <= 0 ? ['🏆', '¡Caca perfecta!'] : over === 1 ? ['🥈', '¡Casi perfecta!'] : over === 2 ? ['🥉', 'Bien pujado'] : ['🧻', 'Llegaste… con esfuerzo'];
+  let toastT;
+  const toast = (msg, ms = 1800) => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); };
+  const tiles = (w, cls = () => '') => [...w].map((c, i) => `<div class="tile ${cls(i)}">${c}</div>`).join('');
+  const difIdx = (a, b) => [...a].findIndex((c, i) => c !== b[i]);
+
+  // ===== Render =====
+  function renderInfo() {
+    const r = stats.racha;
+    $('info').innerHTML = juego.modo === 'diario'
+      ? `<span class="chip">Reto #${NUM}</span><span class="chip">Par ${juego.par} · ${nivel(juego.par)}</span><span class="chip fire">🔥 ${r}</span>`
+      : `<span class="chip mode">Modo libre</span><span class="chip">Par ${juego.par} · ${nivel(juego.par)}</span><span class="chip">✅ ${stats.libres}</span>`;
+    $('hint-n').textContent = `${MAX_PISTAS - juego.pistas}`;
+    $('btn-undo').disabled = !!juego.fin || !juego.pasos.length;
+    $('btn-hint').disabled = !!juego.fin || juego.pistas >= MAX_PISTAS;
+    $('btn-quit').disabled = !!juego.fin;
+    $('btn-quit').classList.toggle('armed', rindiendo);
+    $('btn-quit').textContent = rindiendo ? '¿Seguro? Toca otra vez' : '🏳 Me rindo';
+    $('btn-mode').title = juego.modo === 'diario' ? 'Modo libre' : 'Volver al reto diario';
+  }
+
+  function render() {
+    const L = $('ladder');
+    let h = `<div class="row start"><span class="tag">Inicio</span>${tiles(juego.inicio)}</div>`;
+    let prev = juego.inicio;
+    const ganado = juego.fin === 'gano';
+    juego.pasos.forEach((w, n) => {
+      if (w === META) return;
+      const i = difIdx(prev, w);
+      const side = juego.fin ? `<span class="side">${isFinite(dist(w)) ? dist(w) : '✕'}</span>` : '';
+      h += `<div class="row"><span class="tag">${n + 1}</span>${tiles(w, k => k === i ? 'changed' : '')}${side}</div>`;
+      prev = w;
+    });
+    if (!juego.fin) {
+      const base = ultima();
+      h += `<div class="row input" id="input"><span class="tag">${juego.pasos.length + 1}</span>${
+        [0, 1, 2, 3].map(k => entrada[k]
+          ? `<div class="tile filled">${entrada[k]}</div>`
+          : `<div class="tile ghost ${k === entrada.length ? 'cursor' : ''}">${base[k]}</div>`).join('')}</div>`;
+      h += `<div class="gap" aria-hidden="true"></div>`;
+    }
+    h += `<div class="row goal ${ganado ? 'reached' : ''}"><span class="tag">Meta</span>${tiles(META, k => (ganado && k === difIdx(prev, META)) ? '' : '')}<span class="side">💩</span></div>`;
+    L.innerHTML = h;
+    renderInfo();
+    requestAnimationFrame(() => { const inp = $('input'); (inp || L.lastElementChild).scrollIntoView({ block: 'nearest' }); });
+  }
+
+  function renderKB() {
+    const rows = ['qwertyuiop', 'asdfghjklñ', '>zxcvbnm<'];
+    $('kb').innerHTML = rows.map(r => `<div class="kb-row">${[...r].map(c =>
+      c === '>' ? `<button class="key wide enter" data-k="enter" aria-label="Enviar">ENVIAR</button>`
+      : c === '<' ? `<button class="key wide" data-k="back" aria-label="Borrar">⌫</button>`
+      : `<button class="key ${'ca'.includes(c) ? 'hot' : ''}" data-k="${c}">${c}</button>`).join('')}</div>`).join('');
+  }
+
+  // ===== Jugada =====
+  function error(msg) {
+    toast(msg);
+    const inp = $('input'); if (inp) { inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); }
+  }
+  function tecla(k) {
+    if (juego.fin || !$('overlay').hidden) return;
+    if (rindiendo) { rindiendo = false; renderInfo(); }
+    if (k === 'enter') return enviar();
+    if (k === 'back') { entrada = entrada.slice(0, -1); return render(); }
+    if (entrada.length < 4 && /^[a-zñ]$/.test(k)) { entrada += k; render(); if (entrada.length === 4) autoCheck(); }
+  }
+  function autoCheck() { /* no se envía solo: el jugador confirma con ENVIAR */ }
+  function enviar() {
+    const w = entrada, prev = ultima();
+    if (w.length < 4) return error('Faltan letras: son 4');
+    const cambios = [...w].filter((c, i) => c !== prev[i]).length;
+    if (cambios === 0) return error('Es la misma palabra');
+    if (cambios > 1) return error('Solo puedes cambiar UNA letra');
+    if (!DIC.has(w)) return error(`«${w.toUpperCase()}» no está en el diccionario`);
+    if (w === juego.inicio || juego.pasos.includes(w)) return error('Ya usaste esa palabra');
+    juego.pasos.push(w);
+    juego.pistaPara = null;
+    entrada = '';
+    if (w === META) return ganar();
+    if (!isFinite(dist(w))) toast('Uy… de aquí no se llega a caca. Deshaz.', 2400);
+    persistir(); render();
+  }
+  function deshacer() {
+    if (juego.fin || !juego.pasos.length) return;
+    juego.pasos.pop(); entrada = ''; juego.pistaPara = null; persistir(); render();
+  }
+  function pista() {
+    if (juego.fin || juego.pistas >= MAX_PISTAS) return;
+    const cur = ultima();
+    if (!isFinite(dist(cur))) return toast('Por aquí no se llega. Deshaz un paso.', 2400);
+    const nx = siguiente(cur), i = difIdx(cur, nx);
+    const ord = ['1.ª', '2.ª', '3.ª', '4.ª'][i];
+    juego.pistas++;
+    if (juego.pistaPara === cur) { toast(`💡 Prueba con «${nx.toUpperCase()}»`, 3200); }
+    else { juego.pistaPara = cur; toast(`💡 Cambia la ${ord} letra (faltan ${dist(cur)} pasos)`, 3200); }
+    persistir(); renderInfo();
+  }
+  function rendirse() {
+    if (juego.fin) return;
+    if (!rindiendo) { rindiendo = true; renderInfo(); return; }
+    rindiendo = false; juego.fin = 'rindio'; entrada = '';
+    contar(); persistir(); render();
+    setTimeout(abrirResultado, 400);
+  }
+  function ganar() {
+    juego.fin = 'gano';
+    contar(); persistir(); render();
+    lluvia();
+    const over = juego.pasos.length - juego.par;
+    toast(medalla(over).join(' '), 2000);
+    setTimeout(abrirResultado, 1400);
+  }
+
+  // ===== Estadísticas y logros =====
+  const LOGROS = [
+    ['primera', '💩', 'Primera caca', 'Gana tu primer reto'],
+    ['perfecta', '🏆', 'Caca perfecta', 'Termina un reto en par'],
+    ['limpia', '🧻', 'Sin papel', 'Par sin usar pistas'],
+    ['racha3', '🔥', 'Regularidad', 'Racha de 3 días'],
+    ['racha7', '🌶️', 'Fibra de la buena', 'Racha de 7 días'],
+    ['racha30', '⏰', 'Reloj suizo', 'Racha de 30 días'],
+    ['sabado', '💀', 'Sábado de terror', 'Gana un sábado'],
+    ['diez', '🚽', 'Diez cacas', 'Gana 10 retos'],
+    ['libre5', '🎯', 'Practicante', 'Gana 5 en modo libre'],
+  ];
+  function logro(id) {
+    if (stats.logros[id]) return;
+    stats.logros[id] = DIA;
+    const l = LOGROS.find(x => x[0] === id);
+    setTimeout(() => toast(`🏅 Logro: ${l[2]}`, 2600), 2200);
+  }
+  function contar() {
+    if (juego.contado) return;
+    juego.contado = true;
+    const gano = juego.fin === 'gano';
+    if (juego.modo === 'libre') {
+      if (gano) { stats.libres++; if (stats.libres >= 5) logro('libre5'); }
+      guardar(K.stats, stats); return;
+    }
+    stats.jugados++;
+    if (gano) {
+      const over = juego.pasos.length - juego.par;
+      stats.ganados++;
+      stats.racha = stats.ultimoDia === DIA - 1 ? stats.racha + 1 : 1;
+      stats.ultimoDia = DIA;
+      stats.mejor = Math.max(stats.mejor, stats.racha);
+      stats.dist[Math.min(over, 3)]++;
+      if (over <= 0) { stats.pares++; logro('perfecta'); if (!juego.pistas) logro('limpia'); }
+      logro('primera');
+      if (stats.racha >= 3) logro('racha3');
+      if (stats.racha >= 7) logro('racha7');
+      if (stats.racha >= 30) logro('racha30');
+      if (DOW === 6) logro('sabado');
+      if (stats.ganados >= 10) logro('diez');
+    } else {
+      stats.racha = 0; stats.dist.x++;
+    }
+    guardar(K.stats, stats);
+  }
+  function persistir() { if (juego.modo === 'diario') guardar(K.juego, juego); }
+
+  // ===== Compartir =====
+  function textoCompartir() {
+    const g = juego, gano = g.fin === 'gano';
+    let prev = g.inicio, cuadros = '';
+    for (const w of g.pasos) {
+      if (w === META) { cuadros += '💩'; break; }
+      const a = dist(prev), b = dist(w);
+      cuadros += b < a ? '🟫' : b === a ? '🟨' : '🟥';
+      prev = w;
+    }
+    if (!gano) cuadros += '🏳️';
+    const cab = g.modo === 'diario' ? `Cacadle #${NUM} 💩` : `Cacadle (libre) 💩`;
+    const res = gano ? `${g.inicio.toUpperCase()} → CACA en ${g.pasos.length} (par ${g.par}) ${medalla(g.pasos.length - g.par)[0]}` : `${g.inicio.toUpperCase()} → me rendí (par ${g.par})`;
+    const extra = [g.pistas ? `💡×${g.pistas}` : '', g.modo === 'diario' && stats.racha ? `🔥 Racha: ${stats.racha}` : ''].filter(Boolean).join('  ');
+    return [cab, res, cuadros, extra].filter(Boolean).join('\n');
+  }
+  async function compartir() {
+    const txt = textoCompartir();
+    try { await navigator.clipboard.writeText(txt); toast('Copiado. ¡Pégalo en el grupo!'); }
+    catch { const ta = $('sharebox'); if (ta) { ta.hidden = false; ta.value = txt; ta.select(); } toast('Selecciona el texto y cópialo'); }
+  }
+
+  // ===== Modales =====
+  function abrir(html) { $('sheet').innerHTML = `<button class="icon-btn close" data-close aria-label="Cerrar">✕</button>` + html; $('overlay').hidden = false; }
+  function cerrar() { $('overlay').hidden = true; }
+  $('overlay').addEventListener('click', e => { if (e.target.id === 'overlay' || e.target.closest('[data-close]')) cerrar(); });
+
+  function abrirAyuda() {
+    abrir(`<h2>Cómo se juega</h2>
+      <p>Llega a <b>CACA</b> cambiando <b>una letra a la vez</b>. Cada paso tiene que ser una palabra real de 4 letras.</p>
+      <p>Sin acentos. La Ñ sí cuenta.</p>
+      <div class="ex">
+        <div class="mini">${tiles('sapo')}<span class="lab">inicio</span></div>
+        <div class="mini">${tiles('capo', i => i === 0 ? 'changed' : '')}<span class="lab">S → C</span></div>
+        <div class="mini">${tiles('capa', i => i === 3 ? 'changed' : '')}<span class="lab">O → A</span></div>
+        <div class="mini">${tiles('caca', i => i === 2 ? 'changed' : '')}<span class="lab">P → C 💩</span></div>
+      </div>
+      <h3>Puntuación</h3>
+      <p>El <b>par</b> es el camino más corto posible. Mientras menos pasos, mejor medalla:</p>
+      <div class="medals"><span>🏆</span><span>En par: caca perfecta</span><span>🥈</span><span>Par + 1</span><span>🥉</span><span>Par + 2</span><span>🧻</span><span>Más pasos, pero llegaste</span></div>
+      <h3>Cada día</h3>
+      <p>Un reto nuevo a la medianoche (hora del centro de México). El lunes es fácil, el sábado es de terror. Gana días seguidos para subir tu 🔥 racha y desbloquear logros.</p>
+      <p>Tienes ${MAX_PISTAS} pistas por reto. Puedes deshacer pasos cuando quieras. Para practicar sin límite, usa el modo libre (↻ arriba a la izquierda).</p>
+      <div class="cta"><button class="btn primary" data-close>¡A pujar!</button></div>`);
+  }
+
+  function bloqueStats() {
+    const pct = stats.jugados ? Math.round(stats.ganados / stats.jugados * 100) : 0;
+    const max = Math.max(1, ...Object.values(stats.dist));
+    const labels = [['0', '🏆 Par'], ['1', '🥈 +1'], ['2', '🥉 +2'], ['3', '🧻 +3'], ['x', '🏳️ Rendido']];
+    let now = null;
+    if (juego.modo === 'diario' && juego.fin) now = juego.fin === 'gano' ? String(Math.min(juego.pasos.length - juego.par, 3)) : 'x';
+    return `<div class="stats">
+        <div class="stat"><b>${stats.jugados}</b><span>Jugados</span></div>
+        <div class="stat"><b>${pct}%</b><span>Ganados</span></div>
+        <div class="stat"><b>${stats.racha}</b><span>Racha 🔥</span></div>
+        <div class="stat"><b>${stats.mejor}</b><span>Mejor racha</span></div>
+      </div>
+      <h3>Pasos sobre el par</h3>
+      <div class="bars">${labels.map(([k, l]) => `<div class="bar ${now === k ? 'now' : ''}"><span>${l}</span><i style="width:${Math.max(8, stats.dist[k] / max * 100)}%">${stats.dist[k]}</i></div>`).join('')}</div>
+      <h3>Logros · ${Object.keys(stats.logros).length}/${LOGROS.length}</h3>
+      <div class="badges">${LOGROS.map(([id, e, n, d]) => `<div class="badge ${stats.logros[id] ? '' : 'locked'}"><span class="e">${e}</span><span><b>${n}</b>${d}</span></div>`).join('')}</div>`;
+  }
+  function cuentaAtras() {
+    const ms = EPOCH + (hoy() + 1) * DAY - Date.now();
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return [Math.floor(s / 3600), Math.floor(s % 3600 / 60), s % 60].map(n => String(n).padStart(2, '0')).join(':');
+  }
+  let relojT;
+  function abrirResultado() {
+    if (!juego.fin) return abrirStats();
+    const gano = juego.fin === 'gano';
+    const over = juego.pasos.length - juego.par;
+    const [e, t] = gano ? medalla(over) : ['🏳️', 'Hoy ganó la caca'];
+    const optimo = camino(juego.inicio);
+    const diarioTxt = juego.modo === 'diario'
+      ? `<h3>Siguiente caca en</h3><div class="count" id="count">${cuentaAtras()}</div>`
+      : '';
+    abrir(`<div class="result">
+        <div class="big">${e}</div>
+        <h2>${t}</h2>
+        <p>${gano ? `Llegaste en <b>${juego.pasos.length}</b> pasos. El par era <b>${juego.par}</b>.` : `El camino más corto era de <b>${juego.par}</b> pasos.`}</p>
+        <div class="grid">${textoCompartir().split('\n')[2]}</div>
+        <h3>Camino más corto</h3>
+        <div class="path">${optimo.map(w => `<span>${w}</span>`).join('→')}</div>
+        ${diarioTxt}
+        <div class="cta">
+          <button class="btn primary" id="btn-share">Compartir resultado</button>
+          <button class="btn" id="btn-free">${juego.modo === 'diario' ? 'Jugar modo libre' : 'Otra en modo libre'}</button>
+        </div>
+        <textarea class="sharebox" id="sharebox" rows="5" readonly hidden></textarea>
+      </div>
+      ${juego.modo === 'diario' ? `<h3>Tus estadísticas</h3>${bloqueStats()}` : ''}`);
+    $('btn-share').onclick = compartir;
+    $('btn-free').onclick = () => { cerrar(); modoLibre(); };
+    clearInterval(relojT);
+    relojT = setInterval(() => { const c = $('count'); if (!c) return clearInterval(relojT); c.textContent = cuentaAtras(); if (hoy() !== DIA) location.reload(); }, 1000);
+  }
+  function abrirStats() {
+    abrir(`<h2>Estadísticas</h2>${bloqueStats()}
+      <div class="cta"><button class="btn" data-close>Seguir</button></div>`);
+  }
+
+  // ===== Modos =====
+  const NO_INICIO = new Set('caca caga cago cagas cagan pedo pene puta puto joto teta popo pipi nazi sida'.split(' '));
+  function modoLibre() {
+    const pool = Object.keys(DIST).filter(w => DIST[w] >= 3 && DIST[w] <= 6 && !NO_INICIO.has(w));
+    juego = nuevoJuego(pool[Math.floor(Math.random() * pool.length)], 'libre');
+    entrada = ''; rindiendo = false; render();
+    toast('Modo libre: practica sin afectar tu racha');
+  }
+  function modoDiario() { juego = diario; entrada = ''; rindiendo = false; render(); }
+
+  // ===== Tema =====
+  function aplicarTema(t) { if (t) document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme'); }
+  aplicarTema(leer(K.tema, null));
+  $('btn-theme').onclick = () => {
+    const actual = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const t = actual === 'dark' ? 'light' : 'dark';
+    aplicarTema(t); guardar(K.tema, t);
+  };
+
+  // ===== Confeti de caca =====
+  function lluvia() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const em = ['💩', '💩', '💩', '🧻', '✨', '🏆'];
+    for (let i = 0; i < 36; i++) {
+      const s = document.createElement('span');
+      s.className = 'confetti';
+      s.textContent = em[i % em.length];
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.animationDuration = 1.6 + Math.random() * 1.8 + 's';
+      s.style.animationDelay = Math.random() * .6 + 's';
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 4200);
+    }
+  }
+
+  // ===== Eventos =====
+  $('kb').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) tecla(b.dataset.k); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('overlay').hidden) return cerrar();
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Enter') { if ($('overlay').hidden) { e.preventDefault(); tecla('enter'); } return; }
+    if (e.key === 'Backspace') return tecla('back');
+    let k = e.key.toLowerCase();
+    if (k !== 'ñ') k = k.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    if (/^[a-zñ]$/.test(k)) tecla(k);
+  });
+  $('btn-undo').onclick = deshacer;
+  $('btn-hint').onclick = pista;
+  $('btn-quit').onclick = rendirse;
+  $('btn-help').onclick = abrirAyuda;
+  $('btn-stats').onclick = () => juego.fin ? abrirResultado() : abrirStats();
+  $('btn-mode').onclick = () => juego.modo === 'diario' ? modoLibre() : modoDiario();
+
+  // ===== Arranque =====
+  renderKB();
+  render();
+  if (!leer(K.visto, false)) { guardar(K.visto, true); abrirAyuda(); }
+  else if (juego.fin) setTimeout(abrirResultado, 300);
+})();
+</script>
