@@ -19,39 +19,36 @@ const lemas = new Set(leer('comunes.txt'));
 const RARAS = new Set('caia auca amia asca anta ceca veca hayo amis caco cuca'.split(' '));
 const comunes = new Set([...leer('frecuentes.txt').slice(0, 2000), ...leer('palabras.txt').filter(w => lemas.has(w))].filter(w => set.has(w) && !RARAS.has(w)));
 const vecinosC = w => vecinos(w).filter(n => comunes.has(n));
-const dist = { caca: 0 }; const q = ['caca'];
-while (q.length) { const w = q.shift(); for (const n of vecinosC(w)) if (!(n in dist)) { dist[n] = dist[w] + 1; q.push(n); } }
-console.log('comunes:', comunes.size);
-const hist = {}; for (const w in dist) hist[dist[w]] = (hist[dist[w]] || 0) + 1;
-console.log('palabras válidas:', words.length, '| llegan a caca:', Object.keys(dist).length, '| por distancia:', JSON.stringify(hist));
-
-// Palabras de inicio: solo las más usadas (reconocibles)
+console.log('comunes:', comunes.size, '| palabras válidas:', words.length);
 const pareceEspanol = w => !/[wk]/.test(w) && /[aeiouslnrdzy]$/.test(w) && !/ss|^ch[ae]u$/.test(w) && !EXTRANJERAS.has(w);
 const EXTRANJERAS = new Set('anos ano lady iran troy frey zulu lulu fifi dean lord tell true aron inga siro rita romi tito bren deis enes vilo frey olio pepa lena momo trol huno rele ende quid dino fido guie crie chai chau show film miss blue band jazz club golf bar soul rock team fans pony cola okay hola chao ciao tour star free love baby boys girl gays sexy rosa juan jose luis ana pepe dios maria nena nene'.split(' '));
 const COMUNES = new Set([...leer('comunes.txt'), ...leer('palabras.txt')]);
 
-const frecuentes = leer('frecuentes.txt').slice(0, 1400).filter(w => COMUNES.has(w) && w in dist && !NO_INICIO.has(w) && pareceEspanol(w));
-
-let seed = 20261117;
-const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
-const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const buckets = {};
-for (const w of frecuentes) (buckets[dist[w]] ||= []).push(w);
-for (const d in buckets) shuffle(buckets[d]);
-console.log('inicios por distancia:', JSON.stringify(Object.fromEntries(Object.entries(buckets).map(([d, a]) => [d, a.length]))));
-
 // Día 0 = martes 17 nov 2026. Lunes fácil → sábado de terror.
 const OBJ = { 0: 5, 1: 3, 2: 4, 3: 4, 4: 4, 5: 5, 6: 6 };
-const retos = [];
-for (let i = 0; i < 365; i++) {
-  const wd = (2 + i) % 7, d = OBJ[wd];
-  const order = wd === 6 ? [6, 7, 8, 5, 4, 3] : [d, d - 1, d + 1, d + 2, 3, 4, 5, 6, 7];
-  let w; for (const x of order) if (buckets[x]?.length) { w = buckets[x].shift(); break; }
-  retos.push(w);
+function generar(meta, semilla) {
+  const dist = { [meta]: 0 }; const q = [meta];
+  while (q.length) { const w = q.shift(); for (const n of vecinosC(w)) if (!(n in dist)) { dist[n] = dist[w] + 1; q.push(n); } }
+  const inicios = leer('frecuentes.txt').slice(0, 1400).filter(w => COMUNES.has(w) && w in dist && !NO_INICIO.has(w) && pareceEspanol(w));
+  let seed = semilla;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const buckets = {};
+  for (const w of inicios) (buckets[dist[w]] ||= []).push(w);
+  for (const d in buckets) { const a = buckets[d]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+  const retos = [];
+  for (let i = 0; i < 365; i++) {
+    const wd = (2 + i) % 7, d = OBJ[wd];
+    const order = wd === 6 ? [6, 7, 8, 5, 4, 3] : [d, d - 1, d + 1, d + 2, 3, 4, 5, 6, 7];
+    let w; for (const x of order) if (buckets[x]?.length) { w = buckets[x].shift(); break; }
+    retos.push(w);
+  }
+  const ph = {}; retos.forEach(w => ph[dist[w]] = (ph[dist[w]] || 0) + 1);
+  console.log(`[${meta}] llegan: ${Object.keys(dist).length} | retos: ${retos.length} | únicos: ${new Set(retos).size} | par: ${JSON.stringify(ph)}`);
+  console.log(`[${meta}] primeros 14:`, retos.slice(0, 14).map(w => `${w}(${dist[w]})`).join(' '));
+  return retos;
 }
-const ph = {}; retos.forEach(w => ph[dist[w]] = (ph[dist[w]] || 0) + 1);
-console.log('retos:', retos.length, '| únicos:', new Set(retos).size, '| par:', JSON.stringify(ph));
-console.log('primeros 14:', retos.slice(0, 14).map(w => `${w}(${dist[w]})`).join(' '));
+const retos = generar('caca', 20261117);
+const retosPopo = generar('popo', 20261118);
 
 fs.writeFileSync(path.join(__dirname, '..', 'palabras.js'),
-  `// Generado por tools/build.js — no editar a mano.\nwindow.PALABRAS = ${JSON.stringify(words.join(' '))}.split(' ');\nwindow.COMUNES = ${JSON.stringify([...comunes].sort().join(' '))}.split(' ');\nwindow.RETOS = ${JSON.stringify(retos)};\n`);
+  `// Generado por tools/build.js — no editar a mano.\nwindow.PALABRAS = ${JSON.stringify(words.join(' '))}.split(' ');\nwindow.COMUNES = ${JSON.stringify([...comunes].sort().join(' '))}.split(' ');\nwindow.RETOS = ${JSON.stringify(retos)};\nwindow.RETOS_POPO = ${JSON.stringify(retosPopo)};\n`);

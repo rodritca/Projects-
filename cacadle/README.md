@@ -1,6 +1,6 @@
 # Cacadle 💩
 
-Juego diario de escalera de palabras en español mexicano: llega a **CACA** cambiando una letra a la vez.
+Juego diario de escalera de palabras en español mexicano: llega a **CACA** (o a **POPÓ**, el otro modo) cambiando una letra a la vez. Las letras que ya están en su lugar se pintan de café.
 
 - Cada paso debe ser una palabra real de 4 letras (sin acentos, la Ñ cuenta).
 - **Par** = el camino más corto posible (calculado con BFS sobre el diccionario).

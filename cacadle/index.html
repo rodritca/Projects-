@@ -32,7 +32,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
-header{display:grid;grid-template-columns:80px 1fr 80px;align-items:center;padding-block:12px 4px}
+header{display:grid;grid-template-columns:80px minmax(0,1fr) 80px;align-items:center;padding-block:12px 4px}
 header .l{display:flex}
 header .r{display:flex;justify-content:flex-end}
 h1{margin:0;text-align:center;font-size:24px;font-weight:800;letter-spacing:.02em}
@@ -48,14 +48,22 @@ h1{margin:0;text-align:center;font-size:24px;font-weight:800;letter-spacing:.02e
 .t{width:var(--tile);height:var(--tile);border-radius:10px;display:grid;place-items:center;border:1.5px solid var(--line);
   font-weight:700;font-size:calc(var(--tile)*.46);text-transform:uppercase;user-select:none;background:var(--bg);color:var(--fg)}
 .row.start .t{border-color:var(--fg)}
-.t.ch{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.t.ok{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.t.ch{box-shadow:inset 0 0 0 2px var(--fg)}
+.t.ok.ch{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--bg)}
+/* Selector de modo */
+.modo{justify-self:center;display:inline-flex;padding:3px;border-radius:99px;background:var(--key);gap:2px}
+.modo button{padding:6px 11px;border-radius:99px;font-weight:800;font-size:15px;white-space:nowrap;color:var(--muted);letter-spacing:.01em}
+.modo button[aria-pressed="true"]{background:var(--bg);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.legend{display:flex;gap:14px;justify-content:center;font-size:12px;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
 .row.input .t{color:var(--muted);cursor:pointer;transition:transform .1s}
 .row.input .t:hover{border-color:var(--muted)}
 .row.input .t.sel{border:2px solid var(--accent);color:var(--fg);transform:translateY(-3px)}
 .row.input .t.new{border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--bg));color:var(--fg);transform:translateY(-3px)}
 .row.input .t.typed{color:var(--fg);border-color:var(--fg)}
 .row.input .t.empty{color:var(--line)}
-.row.goal .t{border-style:dashed;color:var(--muted)}
+.row.goal .t{border-style:dashed;color:var(--muted);background:var(--bg)}
 .row.goal.won .t{background:var(--accent);border:1.5px solid var(--accent);color:var(--accent-fg);animation:hop .45s ease-out both}
 .row.goal.won .t:nth-child(2){animation-delay:.05s}.row.goal.won .t:nth-child(3){animation-delay:.1s}.row.goal.won .t:nth-child(4){animation-delay:.15s}
 .dots{color:var(--line);font-size:18px;line-height:1}
@@ -130,7 +138,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
       <button class="ib" id="b-help" aria-label="Cómo se juega"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2.1-2.4 3.8"/><circle cx="12" cy="17.2" r=".5"/></svg></button>
       <button class="ib" id="b-theme" aria-label="Cambiar a modo oscuro"><svg viewBox="0 0 24 24" id="i-theme"></svg></button>
     </div>
-    <h1>caca💩</h1>
+    <div class="modo" role="group" aria-label="Elige el modo"><button data-meta="caca">caca💩</button><button data-meta="popo">popó💩</button></div>
     <div class="r">
       <button class="ib" id="b-support" aria-label="Apoyar el juego"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A4 4 0 0 1 12 8a4 4 0 0 1 7 2.5C19 15.6 12 20 12 20z"/></svg></button>
       <button class="ib" id="b-stats" aria-label="Estadísticas"><svg viewBox="0 0 24 24"><path d="M6 20v-7M12 20V5M18 20v-10"/></svg></button>
@@ -166,7 +174,10 @@ const CONFIG = {
 // ===================================================================
 (() => {
   // ---------- Diccionario y distancias ----------
-  const DIC = new Set(window.PALABRAS), ABC = 'abcdefghijklmnñopqrstuvwxyz', META = 'caca';
+  const MODOS = { caca: { nombre: 'caca', retos: window.RETOS }, popo: { nombre: 'popó', retos: window.RETOS_POPO || window.RETOS } };
+  let metaGuardada = 'caca'; try { metaGuardada = JSON.parse(localStorage.getItem('cacadle.v1.meta')) || 'caca'; } catch {}
+  const META = MODOS[metaGuardada] ? metaGuardada : 'caca', NOMBRE = MODOS[META].nombre, NOMBRE_M = NOMBRE.toUpperCase();
+  const DIC = new Set(window.PALABRAS), ABC = 'abcdefghijklmnñopqrstuvwxyz';
   const vecinos = w => { const o = []; for (let i = 0; i < 4; i++) for (const c of ABC) { if (c === w[i]) continue; const n = w.slice(0, i) + c + w.slice(i + 1); if (DIC.has(n)) o.push(n); } return o; };
   // Todas las palabras se valen para jugar; el par y las pistas solo usan palabras comunes.
   const COM = new Set(window.COMUNES);
@@ -186,13 +197,14 @@ const CONFIG = {
   // ---------- Día (medianoche del centro de México, UTC-6) ----------
   const EPOCH = Date.UTC(2026, 10, 17, 6), DAY = 864e5;
   const hoy = () => Math.floor((Date.now() - EPOCH) / DAY);
-  const DIA = hoy(), NUM = DIA + 1, R = window.RETOS;
+  const DIA = hoy(), NUM = DIA + 1, R = MODOS[META].retos;
   const RETO = R[((DIA % R.length) + R.length) % R.length];
   const DOW = new Date(Date.now() - 6 * 3600e3).getUTCDay();
   const MAXP = 3;
 
   // ---------- Guardado ----------
-  const K = { juego: 'cacadle.v1.juego', stats: 'cacadle.v1.stats', visto: 'cacadle.v1.visto', tema: 'cacadle.v1.tema' };
+  const SUF = META === 'caca' ? '' : '.' + META; // caca conserva las claves originales
+  const K = { juego: 'cacadle.v1.juego' + SUF, stats: 'cacadle.v1.stats' + SUF, visto: 'cacadle.v1.visto', tema: 'cacadle.v1.tema', meta: 'cacadle.v1.meta' };
   const leer = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
   const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   const base0 = { jugados: 0, ganados: 0, pares: 0, racha: 0, mejor: 0, ultimoDia: null, dist: { 0: 0, 1: 0, 2: 0, 3: 0, x: 0 }, logros: {}, libres: 0 };
@@ -211,8 +223,8 @@ const CONFIG = {
   // ---------- UI ----------
   const $ = id => document.getElementById(id);
   const ult = () => juego.pasos.at(-1) || juego.inicio;
-  const medalla = o => o <= 0 ? ['🏆', 'Caca perfecta'] : o === 1 ? ['🥈', 'Casi perfecta'] : o === 2 ? ['🥉', 'Bien pujado'] : ['🧻', 'Llegaste'];
-  const T = (w, cls = () => '') => [...w].map((c, i) => `<div class="t ${cls(i)}">${c}</div>`).join('');
+  const medalla = o => o <= 0 ? ['🏆', `${NOMBRE[0].toUpperCase() + NOMBRE.slice(1)} perfecta`] : o === 1 ? ['🥈', 'Casi perfecta'] : o === 2 ? ['🥉', 'Bien pujado'] : ['🧻', 'Llegaste'];
+  const T = (w, ch = -1) => [...w].map((c, i) => `<div class="t ${c === META[i] ? 'ok' : ''} ${i === ch ? 'ch' : ''}">${c}</div>`).join('');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let tt;
   const toast = (m, ms = 1800) => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), ms); };
@@ -224,7 +236,7 @@ const CONFIG = {
     $('sub').innerHTML = esc((libre ? 'práctica' : `#${NUM}`) + ` · par ${juego.par}` + (!libre && stats.racha ? ` · 🔥 ${stats.racha}` : ''))
       + (pat ? `<div class="sponsor">reto patrocinado por <a href="${esc(pat.url)}" target="_blank" rel="noopener sponsored">${esc(pat.nombre)}</a></div>` : '');
     let h = `<div class="row start">${T(juego.inicio)}</div>`, prev = juego.inicio;
-    for (const w of juego.pasos) { if (w === META) break; const i = difIdx(prev, w); h += `<div class="row">${T(w, k => k === i ? 'ch' : '')}</div>`; prev = w; }
+    for (const w of juego.pasos) { if (w === META) break; const i = difIdx(prev, w); h += `<div class="row">${T(w, i)}</div>`; prev = w; }
     if (!juego.fin) {
       const b = ult();
       const cells = [0, 1, 2, 3].map(k => {
@@ -299,7 +311,7 @@ const CONFIG = {
   function ganar() { juego.fin = 'gano'; contar(); guardarJuego(); render(); lluvia(); setTimeout(resultado, 1100); }
 
   // ---------- Estadísticas y logros ----------
-  const LOGROS = [['primera','💩','Primera caca'],['perfecta','🏆','En par'],['limpia','🧻','En par sin pistas'],['racha3','🔥','3 días seguidos'],['racha7','🌶️','7 días seguidos'],['racha30','⏰','30 días seguidos'],['sabado','💀','Ganar un sábado'],['diez','🚽','10 cacas'],['libre5','🎯','5 prácticas']];
+  const LOGROS = [['primera','💩',`Primera ${NOMBRE}`],['perfecta','🏆','En par'],['limpia','🧻','En par sin pistas'],['racha3','🔥','3 días seguidos'],['racha7','🌶️','7 días seguidos'],['racha30','⏰','30 días seguidos'],['sabado','💀','Ganar un sábado'],['diez','🚽',`10 ${NOMBRE}s`],['libre5','🎯','5 prácticas']];
   function logro(id) { if (stats.logros[id] != null) return; stats.logros[id] = DIA; const l = LOGROS.find(x => x[0] === id); setTimeout(() => toast(`Nuevo logro ${l[1]} ${l[2]}`, 2600), 2000); }
   function contar() {
     if (juego.contado) return; juego.contado = true;
@@ -327,7 +339,7 @@ const CONFIG = {
   }
   function texto() {
     const g = juego, gano = g.fin === 'gano';
-    return [g.modo === 'diario' ? `caca💩 #${NUM}` : 'caca💩 práctica',
+    return [g.modo === 'diario' ? `${NOMBRE}💩 #${NUM}` : `${NOMBRE}💩 práctica`,
       gano ? `${g.pasos.length}/${g.par} ${medalla(g.pasos.length - g.par)[0]}` : `me rendí (par ${g.par})`,
       cuadros(),
       [g.pistas ? `💡${g.pistas}` : '', g.modo === 'diario' && stats.racha ? `🔥${stats.racha}` : ''].filter(Boolean).join(' '),
@@ -364,14 +376,11 @@ const CONFIG = {
   $('ov').addEventListener('click', e => { if (e.target.id === 'ov' || e.target.closest('[data-x]')) cerrar(); });
 
   function ayuda() {
-    abrir(`<h2>Llega a CACA</h2>
+    const ej = META === 'caca' ? [['sapo', -1], ['capo', 0], ['capa', 3], ['caca', 2]] : [['sopa', -1], ['popa', 0], ['popo', 3]];
+    abrir(`<h2>Llega a ${NOMBRE_M}</h2>
       <p>Cambia una letra a la vez.<br>Cada paso debe ser una palabra real.</p>
-      <div class="ex">
-        <div class="row">${T('sapo')}</div>
-        <div class="row">${T('capo', i => i === 0 ? 'ch' : '')}</div>
-        <div class="row">${T('capa', i => i === 3 ? 'ch' : '')}</div>
-        <div class="row">${T('caca', i => i === 2 ? 'ch' : '')}</div>
-      </div>
+      <div class="ex">${ej.map(([w, c]) => `<div class="row">${T(w, c)}</div>`).join('')}</div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>letra en su lugar</span><span><i style="box-shadow:inset 0 0 0 2px var(--fg)"></i>la que cambiaste</span></div>
       <p class="m">Toca una letra, elige la nueva y pícale ENVIAR.<br>El par es el camino más corto. Un reto nuevo cada día.</p>
       <button class="btn" data-x>Jugar</button>`);
   }
@@ -396,7 +405,7 @@ const CONFIG = {
   function resultado() {
     if (!juego.fin) return estadisticas();
     const gano = juego.fin === 'gano', o = juego.pasos.length - juego.par;
-    const [e, t] = gano ? medalla(o) : ['🏳️', 'Hoy ganó la caca'];
+    const [e, t] = gano ? medalla(o) : ['🏳️', `Hoy ganó la ${NOMBRE}`];
     const d = juego.modo === 'diario';
     abrir(`<div class="big">${e}</div><h2>${t}</h2>
       <p class="m">${gano ? `${juego.pasos.length} pasos · par ${juego.par}` : `El par era ${juego.par}`}</p>
@@ -404,7 +413,7 @@ const CONFIG = {
       <div class="path">${camino(juego.inicio).join(' → ')}</div>
       <button class="btn" id="b-share">Compartir</button>
       <textarea id="share" rows="4" readonly hidden></textarea>
-      ${d ? `<hr><p class="m">Siguiente caca en</p><div class="count" id="count">${reloj()}</div>${nums()}` : ''}
+      ${d ? `<hr><p class="m">Siguiente ${NOMBRE} en</p><div class="count" id="count">${reloj()}</div>${nums()}` : ''}
       ${anuncio()}
       <button class="link" id="b-free">${d ? 'practicar mientras' : 'otra práctica'}</button>
       ${d ? '' : '<button class="link" id="b-daily">volver al reto del día</button>'}`);
@@ -416,14 +425,14 @@ const CONFIG = {
     rt = setInterval(() => { const c = $('count'); if (!c) return clearInterval(rt); c.textContent = reloj(); if (hoy() !== DIA) location.reload(); }, 1000);
   }
   function estadisticas() {
-    abrir(`<h2>Tus cacas</h2>${nums()}
+    abrir(`<h2>Tus ${NOMBRE}s</h2>${nums()}
       ${juego.modo === 'libre' ? '<button class="link" id="b-daily">volver al reto del día</button>' : '<button class="link" id="b-free">practicar</button>'}`);
     const f = $('b-free'), dl = $('b-daily');
     if (f) f.onclick = () => { cerrar(); practica(); };
     if (dl) dl.onclick = () => { cerrar(); juego = diario; limpiar(); render(); };
   }
   const NO = new Set('caca caga cago cagas cagan pedo pene puta puto joto teta popo pipi nazi sida culo coño anos'.split(' '));
-  const INICIOS = [...new Set(window.RETOS)].filter(w => !NO.has(w));
+  const INICIOS = [...new Set(MODOS[META].retos)].filter(w => !NO.has(w));
   function practica() {
     juego = nuevo(INICIOS[Math.floor(Math.random() * INICIOS.length)], 'libre'); limpiar(); armado = false; render();
   }
@@ -460,6 +469,10 @@ const CONFIG = {
     tecla(k);
   });
   $('b-undo').onclick = deshacer; $('b-hint').onclick = pista; $('b-quit').onclick = rendirse;
+  document.querySelectorAll('[data-meta]').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.meta === META));
+    b.onclick = () => { if (b.dataset.meta === META) return; guardar(K.meta, b.dataset.meta); location.reload(); };
+  });
   $('b-help').onclick = ayuda; $('b-support').onclick = apoyo;
   $('b-stats').onclick = () => juego.fin ? resultado() : estadisticas();
 
